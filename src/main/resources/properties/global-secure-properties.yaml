@@ -1,0 +1,11 @@
+credentials:
+
+  sys-expedientes-api:
+    client_id: "![8Odu7bRcsp57a1inZB/6Lnex0li+xgVRCo5JPUYNSQOajYx/LbGZBQ==]"
+    client_secret: "![XbOveSd6EVvU0U6NihcMeIbmxgBK6FS68ejUvhtBOZAH/zBvjrB4Ng==]"
+    
+  prc-expedientes-api:
+    client_id: "![8Odu7bRcsp57a1inZB/6Lnex0li+xgVRCo5JPUYNSQOajYx/LbGZBQ==]"
+    client_secret: "![XbOveSd6EVvU0U6NihcMeIbmxgBK6FS68ejUvhtBOZAH/zBvjrB4Ng==]"    
+    
+    

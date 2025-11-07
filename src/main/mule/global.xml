@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+      xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+        http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+    <!-- Configuración del listener HTTP -->
+<http:listener-config name="sys-expedientes-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${port}"/>
+    </http:listener-config>
+	
+    <!-- Configuración de APIkit -->
+	 <apikit:config name="sys-expedientes-api-config" api="resource::d0e11395-59af-42a9-9476-5d0638037c2e:sys-expedientes-api:1.0.8:raml:zip:sys-expedientes-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <!-- Autodiscovery con variable api.id -->
+    
+
+    <!-- Configuración de errores globales -->
+    <configuration doc:name="Configuration" doc:id="cb06006b-11e7-41f9-8b6a-e5afff77417c" defaultErrorHandler-ref="global-error-handler" />
+
+    <!-- Propiedades globales -->
+    <global-property name="api.id" value="0" />
+    <global-property name="secure.key" value="ayesa2025!" />
+
+    <!-- Archivos de configuración -->
+    <configuration-properties doc:name="Global ENV properties" doc:id="a791bfad-9399-4d0c-a9e9-880190ea0882"
+                              file="properties/global-${env}-properties.yaml" />
+    <configuration-properties doc:name="Global properties" doc:id="13a95159-8196-44ab-ab35-82581d72a413" file="properties\global-properties.yaml"/>
+
+    <!-- Secure Properties -->
+	<secure-properties:config name="Secure_Properties_env_Config" doc:name="Secure Properties Config" doc:id="4a7996ad-afa9-47d3-9e2d-50b6ba77fcbd" file="properties\global-${env}-secure-properties.yaml" key="${secure.key}">
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="12af7b5f-a698-4605-85a9-550b4b3975f5" file="properties\global-secure-properties.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="9ac3c816-ac89-4cfa-83dd-9e0aa4d3ed99" flowRef="sys-expedientes-api-main" apiId="${api.id}"/>
+	<configuration-properties doc:name="Configuration properties" doc:id="b70e2ef4-3002-4729-ba60-c3182aa61079" file="properties\global-local-properties.yaml" />
+
+</mule>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="urn:umu:eadmin:services:common:schema"
+    xmlns="urn:umu:eadmin:services:common:schema"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+
+  <!-- Tipo comodín para entradas/salidas opcionales -->
+  <xsd:complexType name="AnyType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <!-- Datos en base64 -->
+  <xsd:simpleType name="Base64DataType">
+    <xsd:restriction base="xsd:base64Binary"/>
+  </xsd:simpleType>
+
+  <!-- Resultado estándar (lo usa tu mock y tus DW) -->
+  <xsd:complexType name="ResultType">
+    <xsd:sequence>
+      <xsd:element name="ResultMajor" type="xsd:string"/>
+      <xsd:element name="ResultMessage" type="xsd:string" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,49 @@
+port: "8081"
+apiInstance: "2635682"
+
+
+response:
+  timeout: "60000"
+  
+connection:
+  timeout: "10000"
+
+json:
+  logger:
+    application:
+      name: "sys-expedientes-api"
+      version: "1.0.0"
+      environmentName: "Development"
+      
+retry:
+  delay: "1000"
+
+
+
+sys-app2u-aas:
+  host: "localhost"
+  hostcloud: "localhost"
+  port: "8082"
+  
+db2:
+  url: "jdbc:db2://mvs4x0.si.generali.es:11400/DB2TEST"
+  retry:
+    maxRetries: "2"
+    millisBetweenRetries: "5000" 
+    
+db:
+  host: "10.185.13.30"
+  port: "1521"
+  user: "TEST_EXP"
+  pass: "AnThB"
+  servidor: "AGRIDES"              
+
+soap:
+  #location: "classpath:ServicioPortafirmasUMU.WSDL" 
+  location: "https://portafirmas-pru.carm.es/portafirmas/services/ServicioPortafirmasUMU?wsdl"
+  service: "ServicioPortafirmasUMU"
+  port: "ServicioPortafirmasUMU"
+  address: "https://portafirmas-pru.carm.es/portafirmas/services/ServicioPortafirmasUMU"    
+#portafirmas-pru.carm.es
+#147.84.179.71
+

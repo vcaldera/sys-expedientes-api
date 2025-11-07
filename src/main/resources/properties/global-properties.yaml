@@ -1,0 +1,23 @@
+port: "8081"
+apiInstance: "2635684"
+
+sys-expedientes-api:
+
+  expedientesGet:
+    path: "api/v1/expedientes/{codigo}"
+
+  expedientesPost:
+    path: "api/v1/expedientes"        
+  
+  documentosPost:
+    path: "api/v1/expedientes/{codigo}/documentos"
+
+  usuarioGet:
+    path: "api/v1/usuarios/{usuario}/expedientes"   
+
+
+db2:
+  url: "jdbc:db2://mvs4x0.si.generali.es:11400/DB2TEST"
+  retry:
+    maxRetries: "2"
+    millisBetweenRetries: "5000"                   

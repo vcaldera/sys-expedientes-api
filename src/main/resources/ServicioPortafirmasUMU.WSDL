@@ -1,0 +1,1058 @@
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:sp="urn:umu:eadmin:services:portafirmas" xmlns:sps="urn:umu:eadmin:services:portafirmas:schema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ServicioPortafirmasUMU" targetNamespace="urn:umu:eadmin:services:portafirmas">
+<types>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:cm="urn:umu:eadmin:services:common:schema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap11-enc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:sp="urn:umu:eadmin:services:portafirmas" xmlns:sps="urn:umu:eadmin:services:portafirmas:schema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="qualified" targetNamespace="urn:umu:eadmin:services:portafirmas:schema">
+<import namespace="urn:umu:eadmin:services:common:schema" schemaLocation="umu-eadmin-services-common_2_0.xsd"/>
+<!--  TIPOS Y ELEMENTOS BASICOS  -->
+<!--  Metadatos que debe proporcionar una aplicación que incluya documentación  -->
+<complexType name="MetadatosBasicosType">
+<annotation>
+<documentation>Conjunto de metadatos que debe proporcionar una aplicación cuando incluye en la solicitud documentación relacionada que no se encuentra en Archivo.</documentation>
+</annotation>
+<sequence>
+<element name="Nombre" type="string"/>
+<element name="NivelDescripcion" type="sps:NivelDescripcionType"/>
+<element name="FechaCreacion" type="dateTime"/>
+<element name="TipoMime" type="string"/>
+<element minOccurs="0" name="Otros" type="cm:AnyType"/>
+</sequence>
+</complexType>
+<simpleType name="NivelDescripcionType">
+<restriction base="string">
+<enumeration value="EXPEDIENTE"/>
+<enumeration value="DOCUMENTO"/>
+</restriction>
+</simpleType>
+<!--  Unidad documental relacionada  -->
+<complexType name="UnidadDocumentalRelacionadaType">
+<annotation>
+<documentation>Unidad documental a relacionar con una solicitud de firma. Consta de: - Identificador. Pid de una unidad documental de Archivo o el identificador de un documento gestionado por una aplicación. - Metadatos. Conjunto de metadatos que se deben incluir si el documento no procede de archivo. - DocumentacionExpediente. Documentación incluida en el expediente. No soportado.</documentation>
+</annotation>
+<sequence>
+<element name="Identificador" type="string"/>
+<element minOccurs="0" name="Metadatos" type="sps:MetadatosBasicosType"/>
+<element minOccurs="0" name="DocumentacionExpediente" type="sps:DocumentacionRelacionadaType"/>
+</sequence>
+</complexType>
+<!--  Posibles valores para el perfil de los firmantes de los flujos  -->
+<simpleType name="PerfilFirmanteType">
+<restriction base="anyURI">
+<enumeration value="urn:umu:eadmin:services:portafirmas:perfilfirmante:personal"/>
+<enumeration value="urn:umu:eadmin:services:portafirmas:perfilfirmante:institucional"/>
+</restriction>
+</simpleType>
+<!--  Documentación relacionada con la solicitud  -->
+<complexType name="DocumentacionRelacionadaType">
+<annotation>
+<documentation>Unidades documentales a relacionar con una solicitud de firma. - Procedencia (opcional). El valor "urn:umu:eadmin:servicios:archivo" indica que procede de Archivo, equivale al comportamiento por defecto.</documentation>
+</annotation>
+<sequence>
+<element maxOccurs="unbounded" name="UnidadDocumentalRelacionada" type="sps:UnidadDocumentalRelacionadaType"/>
+</sequence>
+<attribute name="Procedencia" type="anyURI" use="optional"/>
+</complexType>
+<!--  Intervalo para las consultas de solicitudes  -->
+<complexType name="IntervaloType">
+<sequence>
+<element minOccurs="0" name="FechaInicio" type="date"/>
+<element minOccurs="0" name="FechaFin" type="date"/>
+</sequence>
+</complexType>
+<!--  Información básica de solicitud  -->
+<complexType name="InformacionBasicaSolicitudType">
+<annotation>
+<documentation>Información básica de una solicitud. Se utiliza en la respuesta a la consulta de solicitudes en cierto estado.</documentation>
+</annotation>
+<sequence>
+<element name="IdSolicitud" type="string"/>
+<element name="Asunto" type="string"/>
+<element name="FechaCreacion" type="date"/>
+<element name="FechaTramitacion" type="dateTime"/>
+</sequence>
+</complexType>
+<!--  Documento base -->
+<complexType name="DocumentoBaseType">
+<sequence>
+<element name="Contenido" type="cm:Base64DataType"/>
+</sequence>
+<attribute name="Codificacion" type="anyURI" use="optional"/>
+</complexType>
+<!--  DocumentoOriginal  -->
+<element name="DocumentoOriginal">
+<annotation>
+<documentation>Documento a firmar que se incluye en la solicitud.</documentation>
+</annotation>
+<complexType>
+<complexContent>
+<extension base="sps:DocumentoBaseType">
+<sequence>
+<element name="Descripcion" type="string"/>
+<!--  Nuevo Portafirmas 3.0.1  -->
+<element minOccurs="0" name="TipologiaENI" type="string"/>
+<element minOccurs="0" name="MetadatosList" type="sps:MetadatosListType"/>
+</sequence>
+</extension>
+</complexContent>
+</complexType>
+</element>
+<complexType name="MetadatosListType">
+<sequence>
+<element maxOccurs="unbounded" name="Metadato" type="sps:MetadatoType"/>
+</sequence>
+</complexType>
+<complexType name="MetadatoType">
+<sequence>
+<element name="Clave" type="string"/>
+<element name="Valor" type="string"/>
+</sequence>
+</complexType>
+<!--  Revisor  -->
+<complexType name="RevisorType">
+<annotation>
+<documentation>Revisor de un firmante.</documentation>
+</annotation>
+<sequence>
+<element name="Identificador" type="string"/>
+<element minOccurs="0" name="EstadoRevision" type="sps:EstadoRevisionType"/>
+<element minOccurs="0" name="MotivoRechazo" type="string"/>
+</sequence>
+</complexType>
+<simpleType name="EstadoRevisionType">
+<restriction base="anyURI">
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:revision:revisado"/>
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:revision:rechazado"/>
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:revision:sinaccion"/>
+</restriction>
+</simpleType>
+<!--  Firmante  -->
+<element name="Firmante" type="sps:FirmanteType"/>
+<complexType name="FirmanteType">
+<annotation>
+<documentation>Usuario que se incluye como parte del flujo de firma asociado a una solicitud.</documentation>
+</annotation>
+<sequence>
+<element name="Identificador" type="string"/>
+<element minOccurs="0" name="Motivo" type="string"/>
+<element minOccurs="0" name="Perfil" type="sps:PerfilFirmanteType"/>
+</sequence>
+</complexType>
+<complexType name="EstadoFirmanteType">
+<complexContent>
+<extension base="sps:FirmanteType">
+<sequence>
+<element minOccurs="0" name="Estado" type="sps:EstadoFirmaType"/>
+<element minOccurs="0" name="MotivoRechazo" type="string"/>
+<!--  Nuevo v3.01: lista de revisores del firmante  -->
+<element maxOccurs="unbounded" minOccurs="0" name="Revisor" type="sps:RevisorType"/>
+<!--  No se devuelve para solicitudes creadas antes de la versión 3.02  -->
+<element minOccurs="0" name="FechaFirmaRechazo" type="dateTime"/>
+</sequence>
+</extension>
+</complexContent>
+</complexType>
+<simpleType name="EstadoFirmaType">
+<restriction base="anyURI">
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:firma:firmado"/>
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:firma:rechazado"/>
+<enumeration value="urn:umu:eadmin:services:portafirmas:estado:firma:sinaccion"/>
+</restriction>
+</simpleType>
+<!--  Firmantes  -->
+<complexType name="FirmantesType">
+<sequence>
+<element maxOccurs="unbounded" name="Firmante" type="sps:FirmanteType"/>
+</sequence>
+</complexType>
+<!--  Paso de firma  -->
+<complexType name="PasoFirmaType">
+<sequence>
+<element name="Descripcion" type="string"/>
+<element name="Firmantes" type="sps:FirmantesType"/>
+</sequence>
+</complexType>
+<complexType name="EstadoPasoFirmaType">
+<sequence>
+<element name="Descripcion" type="string"/>
+<element maxOccurs="unbounded" name="Firmantes" type="sps:EstadoFirmanteType"/>
+</sequence>
+<attribute name="PasoCompletado" type="boolean" use="required"/>
+</complexType>
+<!--  Flujo de firma  -->
+<element name="FlujoFirma" type="sps:FlujoFirmaType"/>
+<complexType name="FlujoFirmaType">
+<annotation>
+<documentation>Flujo de firmantes de una solicitud.</documentation>
+</annotation>
+<sequence>
+<element maxOccurs="unbounded" name="PasoFirma" type="sps:PasoFirmaType"/>
+</sequence>
+<attribute name="FlujoOrdenado" type="boolean" use="required"/>
+<attribute name="RechazoPasoUnFirmante" type="boolean" use="optional"/>
+</complexType>
+<complexType name="EstadoFlujoFirmaType">
+<annotation>
+<documentation>Estado del flujo de firmantes de una solicitud.</documentation>
+</annotation>
+<sequence>
+<element maxOccurs="unbounded" name="PasoFirma" type="sps:EstadoPasoFirmaType"/>
+</sequence>
+<attribute name="FlujoOrdenado" type="boolean" use="required"/>
+</complexType>
+<!--  Firma  -->
+<complexType name="FechaFirmaType">
+<simpleContent>
+<extension base="dateTime">
+<attribute name="Certificada" type="boolean" use="required"/>
+</extension>
+</simpleContent>
+</complexType>
+<complexType name="FirmaType">
+<annotation>
+<documentation>Información sobre el proceso de firma de una solicitud firmada.</documentation>
+</annotation>
+<sequence>
+<element name="Formato" type="string"/>
+<element minOccurs="0" name="Politica" type="string"/>
+<element name="FechaFirma" type="sps:FechaFirmaType"/>
+<element minOccurs="0" name="TSA" type="string"/>
+<element ref="sps:FlujoFirma"/>
+<element name="ResultadoVerificacion" type="string"/>
+</sequence>
+</complexType>
+<!--  Información de seguridad  -->
+<complexType name="InformacionSeguridadListType">
+<sequence>
+<element maxOccurs="unbounded" name="Firma" type="sps:FirmaType"/>
+</sequence>
+</complexType>
+<!--  Información básica de documento  -->
+<complexType name="InformacionBasicaDocumentoType">
+<sequence>
+<element minOccurs="0" name="Descripcion" type="string"/>
+<element minOccurs="0" name="MetadatosList" type="sps:MetadatosListType"/>
+<element minOccurs="0" name="InformacionSeguridadList" type="sps:InformacionSeguridadListType"/>
+</sequence>
+<attribute name="ValidacionId" type="string" use="optional"/>
+</complexType>
+<!--  Identificador de documento de archivo  -->
+<complexType name="DocArchivoType">
+<sequence>
+<xsd:choice>
+<element name="PidUnidadDocumental" type="sps:PidUnidadDocumentalType"/>
+<element name="UuidUnidadDocumental" type="string"/>
+</xsd:choice>
+</sequence>
+</complexType>
+<!--  Identificador de documento de archivo  -->
+<complexType name="PidUnidadDocumentalType">
+<sequence>
+<element name="Pid" type="string"/>
+<element name="Estado" type="string"/>
+</sequence>
+</complexType>
+<!--  Identificador de una solicitud  -->
+<element name="IdSolicitud" type="string"/>
+<!--  Localizador de un documento  -->
+<element name="ValidacionId" type="string"/>
+<!--  ELEMENTOS COMUNES  -->
+<element name="EntradasOpcionales" type="cm:AnyType"/>
+<!--  Entradas Opcionales  -->
+<element name="SalidasOpcionales" type="cm:AnyType"/>
+<element name="Resultado" type="cm:ResultType"/>
+<!--  SOLICITUD INICIA SOLICITUD FIRMA  -->
+<element name="IniciaSolicitudFirmaRequest" type="sps:IniciaSolicitudFirmaRequestType"/>
+<complexType name="IniciaSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para la creación de una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element name="Solicitante" type="string"/>
+<element ref="sps:FlujoFirma"/>
+<element name="Asunto" type="string"/>
+<element minOccurs="0" name="DocumentacionRelacionada" type="sps:DocumentacionRelacionadaType"/>
+<!--  Nuevo v3.01 - Envío de copias auténticas -->
+<element minOccurs="0" name="EnvioCopiasAutenticas" type="sps:EnvioCopiasAutenticasType"/>
+<!--  Nuevo v3.02 - Descripción de la solicitud  -->
+<element minOccurs="0" name="Descripcion" type="string"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Entradas opcionales -->
+<element name="GeneraCopiaAutentica" type="boolean"/>
+<element name="FirmaDispositivoMovil"/>
+<element name="FechaLimite" type="dateTime"/>
+<!--  Nuevo v3.01 Envío de copias auténticas	 -->
+<complexType name="EnvioCopiasAutenticasType">
+<annotation>
+<documentation>Envío de copias autenticas.</documentation>
+</annotation>
+<sequence>
+<element name="DescripcionCorreo" type="string"/>
+<element name="Destinatarios" type="sps:DestinatariosType"/>
+</sequence>
+</complexType>
+<!--  Nuevo v3.01 Envío de copias auténticas	 -->
+<complexType name="DestinatariosType">
+<annotation>
+<documentation>Destinatarios de copias autenticas generadas.</documentation>
+</annotation>
+<sequence>
+<element maxOccurs="unbounded" minOccurs="0" name="DestinatariosTo" type="sps:DestinatarioType"/>
+<element maxOccurs="unbounded" minOccurs="0" name="DestinatariosCCO" type="sps:DestinatarioType"/>
+</sequence>
+</complexType>
+<!--  Nuevo v3.01 Envío de copias auténticas	 -->
+<complexType name="DestinatarioType">
+<annotation>
+<documentation>Destinatario de copias autenticas.</documentation>
+</annotation>
+<sequence>
+<element name="CorreoElectronico" type="string"/>
+</sequence>
+</complexType>
+<!--  RESPUESTA INICIA SOLICITUD FIRMA  -->
+<element name="IniciaSolicitudFirmaResponse" type="sps:IniciaSolicitudFirmaResponseType"/>
+<complexType name="IniciaSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+<element minOccurs="0" ref="sps:IdSolicitud"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD MODIFICA SOLICITUD FIRMA  -->
+<element name="ModificaSolicitudFirmaRequest" type="sps:ModificaSolicitudFirmaRequestType"/>
+<complexType name="ModificaSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para la modificación de una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+<element name="Solicitante" type="string"/>
+<element ref="sps:FlujoFirma"/>
+<element name="Asunto" type="string"/>
+<element minOccurs="0" name="DocumentacionRelacionada" type="sps:DocumentacionRelacionadaType"/>
+<!--  Nuevo v3.01 - Tipos para el envío de copias  -->
+<element minOccurs="0" name="EnvioCopiasAutenticas" type="sps:EnvioCopiasAutenticasType"/>
+<!--  Nuevo v3.02 - Descripción de la solicitud  -->
+<element minOccurs="0" name="Descripcion" type="string"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Mismas entradas opcionales que iniciaSolicitudFirma  -->
+<!--  Entradas opcionales
+			<element name="GeneraCopiaAutentica" type="boolean"/>
+			<element name="FirmaDispositivoMovil"/>
+			<element name="FechaLimite" type="dateTime"/>  -->
+<!--  RESPUESTA MODIFICA SOLICITUD FIRMA  -->
+<element name="ModificaSolicitudFirmaResponse" type="sps:ModificaSolicitudFirmaResponseType"/>
+<complexType name="ModificaSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD GUARDA DOCUMENTO ORIGINAL  -->
+<element name="GuardaDocumentoOriginalRequest" type="sps:GuardaDocumentoOriginalRequestType"/>
+<complexType name="GuardaDocumentoOriginalRequestType">
+<annotation>
+<documentation>Petición para incluir un documento en una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+<element ref="sps:DocumentoOriginal"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Entradas opcionales  -->
+<element name="VersionImprimible" type="cm:Base64DataType"/>
+<!--  RESPUESTA GUARDA DOCUMENTO ORIGINAL  -->
+<element name="GuardaDocumentoOriginalResponse" type="sps:GuardaDocumentoOriginalResponseType"/>
+<complexType name="GuardaDocumentoOriginalResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+<element minOccurs="0" ref="sps:ValidacionId"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD INCLUYE DOCUMENTO ARCHIVO  -->
+<element name="IncluyeDocumentoArchivoEnSolicitudRequest" type="sps:IncluyeDocumentoArchivoEnSolicitudRequestType"/>
+<complexType name="IncluyeDocumentoArchivoEnSolicitudRequestType">
+<annotation>
+<documentation>Petición para incluir un documento de archivo en una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+<element name="DocumentoArchivo" type="sps:DocArchivoType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA INCLUYE DOCUMENTO ARCHIVO  -->
+<element name="IncluyeDocumentoArchivoEnSolicitudResponse" type="sps:IncluyeDocumentoArchivoEnSolicitudResponseType"/>
+<complexType name="IncluyeDocumentoArchivoEnSolicitudResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD FINALIZA SOLICITUD FIRMA  -->
+<element name="FinalizaSolicitudFirmaRequest" type="sps:FinalizaSolicitudFirmaRequestType"/>
+<complexType name="FinalizaSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para dar por finalizada la creación de una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA FINALIZA SOLICITUD FIRMA  -->
+<element name="FinalizaSolicitudFirmaResponse" type="sps:FinalizaSolicitudFirmaResponseType"/>
+<complexType name="FinalizaSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD CONSULTA LISTADO SOLICITUDES  -->
+<element name="ListaSolicitudesFirmaRequest" type="sps:ListaSolicitudesFirmaRequestType"/>
+<complexType name="ListaSolicitudesFirmaRequestType">
+<annotation>
+<documentation>Petición para obtener un listado de las solicitudes generadas en un determinado estado. La identificación del solicitante se determina por el elemento cm:ClaimedIdentity, cuya inclusión como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element name="Estado" type="anyURI"/>
+<element minOccurs="0" name="Asunto" type="string"/>
+<element minOccurs="0" name="IdFirmante" type="string"/>
+<element minOccurs="0" name="IntervaloCreacion" type="sps:IntervaloType"/>
+<element minOccurs="0" name="IntervaloTramitacion" type="sps:IntervaloType"/>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA CONSULTA LISTADO SOLICITUDES  -->
+<element name="ListaSolicitudesFirmaResponse" type="sps:ListaSolicitudesFirmaResponseType"/>
+<complexType name="ListaSolicitudesFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element maxOccurs="unbounded" minOccurs="0" name="InformacionBasicaSolicitudFirma" type="sps:InformacionBasicaSolicitudType"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD CONSULTA ESTADO SOLICITUD  -->
+<element name="ConsultaEstadoSolicitudFirmaRequest" type="sps:ConsultaEstadoSolicitudFirmaRequestType"/>
+<complexType name="ConsultaEstadoSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para obtener el estado de una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+<!--  Nuevo v3.01: El atributo DevuelveEstadoFlujoFirma esta obsoleto (DEPRECATED). Solo recupera el primer revisor del firmante.  -->
+<attribute name="DevuelveEstadoFlujoFirma" type="boolean" use="optional"/>
+<!--  Nuevo v3.01: Reemplaza al atributo DevuelveEstadoFlujoFirma y recupera todos los revisores del firmante.  -->
+<attribute name="DevuelveFlujoFirmaCompleto" type="boolean" use="optional"/>
+</complexType>
+<!--  RESPUESTA CONSULTA ESTADO SOLICITUD  -->
+<element name="ConsultaEstadoSolicitudFirmaResponse" type="sps:ConsultaEstadoSolicitudFirmaResponseType"/>
+<complexType name="ConsultaEstadoSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" name="FechaTramitacion" type="dateTime"/>
+<element minOccurs="0" name="Motivo" type="string"/>
+<element minOccurs="0" name="EstadoFlujo" type="sps:EstadoFlujoFirmaType"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD LISTA DOCUMENTOS EN SOLICITUD  -->
+<element name="ListaDocumentosEnSolicitudFirmaRequest" type="sps:ListaDocumentosEnSolicitudFirmaRequestType"/>
+<complexType name="ListaDocumentosEnSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para obtener los documentos de una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA LISTA DOCUMENTOS EN SOLICITUD  -->
+<element name="ListaDocumentosEnSolicitudFirmaResponse" type="sps:ListaDocumentosEnSolicitudFirmaResponseType"/>
+<complexType name="ListaDocumentosEnSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+<element minOccurs="0" name="DocumentosEnSolicitudList" type="sps:DocumentosEnSolicitudListType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<complexType name="DocumentosEnSolicitudListType">
+<sequence>
+<element maxOccurs="unbounded" name="DocumentoEnSolicitud" type="sps:DocumentoEnSolicitudType"/>
+</sequence>
+</complexType>
+<complexType name="DocumentoEnSolicitudType">
+<attribute name="ValidacionId" type="string" use="required"/>
+<attribute name="Firmado" type="boolean" use="required"/>
+</complexType>
+<!--  SOLICITUD RECUPERA CONTENIDO DOCUMENTO  -->
+<element name="RecuperaContenidoDocumentoRequest" type="sps:RecuperaContenidoDocumentoRequestType"/>
+<complexType name="RecuperaContenidoDocumentoRequestType">
+<annotation>
+<documentation>Petición para obtener el contenido de un documento. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:ValidacionId"/>
+<element name="EstadoDocumento" type="anyURI"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA RECUPERA CONTENIDO DOCUMENTO  -->
+<element name="RecuperaContenidoDocumentoResponse" type="sps:RecuperaContenidoDocumentoResponseType"/>
+<complexType name="RecuperaContenidoDocumentoResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+<element minOccurs="0" name="ContenidoDocumento" type="sps:DocumentoBaseType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD RECUPERA INFORMACIÓN BÁSICA DOCUMENTO  -->
+<element name="RecuperaInformacionBasicaDocumentoRequest" type="sps:RecuperaInformacionBasicaDocumentoRequestType"/>
+<complexType name="RecuperaInformacionBasicaDocumentoRequestType">
+<annotation>
+<documentation>Petición para obtener información de un documento. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:ValidacionId"/>
+<element name="EstadoDocumento" type="anyURI"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA RECUPERA CONTENIDO DOCUMENTO  -->
+<element name="RecuperaInformacionBasicaDocumentoResponse" type="sps:RecuperaInformacionBasicaDocumentoResponseType"/>
+<complexType name="RecuperaInformacionBasicaDocumentoResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+<element minOccurs="0" name="InformacionBasicaDocumento" type="sps:InformacionBasicaDocumentoType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD ELIMINA DOCUMENTO  -->
+<element name="EliminaDocumentoOriginalRequest" type="sps:EliminaDocumentoOriginalRequestType"/>
+<complexType name="EliminaDocumentoOriginalRequestType">
+<annotation>
+<documentation>Petición para eliminar un documento. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:ValidacionId"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA ELIMINA DOCUMENTO  -->
+<element name="EliminaDocumentoOriginalResponse" type="sps:EliminaDocumentoOriginalResponseType"/>
+<complexType name="EliminaDocumentoOriginalResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD ELIMINA SOLICITUD  -->
+<element name="EliminaSolicitudFirmaRequest" type="sps:EliminaSolicitudFirmaRequestType"/>
+<complexType name="EliminaSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para eliminar una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA ELIMINA SOLICITUD  -->
+<element name="EliminaSolicitudFirmaResponse" type="sps:EliminaSolicitudFirmaResponseType"/>
+<complexType name="EliminaSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  SOLICITUD ANULA SOLICITUD  -->
+<element name="AnulaSolicitudFirmaRequest" type="sps:AnulaSolicitudFirmaRequestType"/>
+<complexType name="AnulaSolicitudFirmaRequestType">
+<annotation>
+<documentation>Petición para anular una solicitud de firma. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element ref="sps:IdSolicitud"/>
+<element name="Motivo" type="string"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA ANULA SOLICITUD  -->
+<element name="AnulaSolicitudFirmaResponse" type="sps:AnulaSolicitudFirmaResponseType"/>
+<complexType name="AnulaSolicitudFirmaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  ANULAR DOCUMENTO  -->
+<element name="AnulaDocumentoFirmadoRequest" type="sps:AnulaDocumentoFirmadoRequestType"/>
+<complexType name="AnulaDocumentoFirmadoRequestType">
+<annotation>
+<documentation>Petición para anular un documento firmado de una solicitud cerrada. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="0" ref="sps:EntradasOpcionales"/>
+<element name="ValidacionIdDoc" type="string"/>
+<element name="Motivo" type="string"/>
+<element name="IdResponsable" type="string"/>
+<element name="NombreResponsable" type="string"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  RESPUESTA ANULA DOCUMENTO  -->
+<element name="AnulaDocumentoFirmadoResponse" type="sps:AnulaDocumentoFirmadoResponseType"/>
+<complexType name="AnulaDocumentoFirmadoResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  Nuevo v3.04 - Solicitudes de firma móvil síncrona  -->
+<!--  SOLICITUD GENERA SOLICITUD FIRMA MOVIL SINCRONA  -->
+<element name="GeneraSolicitudFirmaMovilSincronaRequest" type="sps:GeneraSolicitudFirmaMovilSincronaRequestType"/>
+<complexType name="GeneraSolicitudFirmaMovilSincronaRequestType">
+<annotation>
+<documentation>Petición para la creación de una solicitud de firma con un único firmante y un único documento, archivado, destinada a una firma móvil síncrona (no aparecerá en los listados de pendientes y no se reintentará su archivado). La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="1" ref="sps:EntradasOpcionales"/>
+<element name="Solicitante" type="string"/>
+<element name="Firmante" type="sps:FirmanteType"/>
+<element name="Asunto" type="string"/>
+<element minOccurs="0" name="Descripcion" type="string"/>
+<element name="DocumentoArchivo" type="sps:DocArchivoType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Nuevo v3.04 - Solicitudes de firma móvil síncrona  -->
+<!--  RESPUESTA GENERA SOLICITUD FIRMA MOVIL SINCRONA  -->
+<element name="GeneraSolicitudFirmaMovilSincronaResponse" type="sps:GeneraSolicitudFirmaMovilSincronaResponseType"/>
+<complexType name="GeneraSolicitudFirmaMovilSincronaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:IdSolicitud"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  Nuevo v3.04 - Solicitudes de firma móvil síncrona  -->
+<!--  SOLICITUD PUEDE FIRMAR CON PORTAFIRMAS MÓVIL  -->
+<element name="PuedeFirmarConPortafirmasMovilRequest" type="sps:PuedeFirmarConPortafirmasMovilRequestType"/>
+<complexType name="PuedeFirmarConPortafirmasMovilRequestType">
+<annotation>
+<documentation>Petición para consultar si un determinado usuario puede firmar con la aplicación móvil. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="1" ref="sps:EntradasOpcionales"/>
+<element name="IdFirmante" type="string"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Nuevo v3.04 - Solicitudes de firma móvil síncrona  -->
+<!--  RESPUESTA PUEDE FIRMAR CON PORTAFIRMAS MÓVIL  -->
+<element name="PuedeFirmarConPortafirmasMovilResponse" type="sps:PuedeFirmarConPortafirmasMovilResponseType"/>
+<complexType name="PuedeFirmarConPortafirmasMovilResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+<!--  Nuevo v3.04 - Generación de solicitudes firmadas  -->
+<!--  SOLICITUD GENERA SOLICITUD FIRMADA  -->
+<element name="GeneraSolicitudFirmadaRequest" type="sps:GeneraSolicitudFirmadaRequestType"/>
+<complexType name="GeneraSolicitudFirmadaRequestType">
+<annotation>
+<documentation>Petición para la creación de una solicitud de firma con un único firmante y un único documento, archivado y ya firmado. La inclusión del elemento cm:ClaimedIdentity como entrada opcional es obligatoria.</documentation>
+</annotation>
+<sequence>
+<element minOccurs="1" ref="sps:EntradasOpcionales"/>
+<element name="Solicitante" type="string"/>
+<element name="Firmante" type="sps:FirmanteType"/>
+<element name="Asunto" type="string"/>
+<element minOccurs="0" name="Descripcion" type="string"/>
+<element name="DocumentoArchivo" type="sps:DocArchivoType"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="optional"/>
+</complexType>
+<!--  Nuevo v3.04 - Generación de solicitudes firmadas  -->
+<!--  RESPUESTA GENERA SOLICITUD FIRMADA  -->
+<element name="GeneraSolicitudFirmadaResponse" type="sps:GeneraSolicitudFirmadaResponseType"/>
+<complexType name="GeneraSolicitudFirmadaResponseType">
+<sequence>
+<element ref="sps:Resultado"/>
+<element minOccurs="0" ref="sps:IdSolicitud"/>
+<element minOccurs="0" ref="sps:SalidasOpcionales"/>
+</sequence>
+<attribute name="Profile" type="anyURI" use="required"/>
+</complexType>
+</schema>
+</types>
+<message name="modificaSolicitudFirmaOutput">
+<part element="sps:ModificaSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="listaSolicitudesFirmaInput">
+<part element="sps:ListaSolicitudesFirmaRequest" name="parameter"> </part>
+</message>
+<message name="generaSolicitudFirmadaInput">
+<part element="sps:GeneraSolicitudFirmadaRequest" name="parameter"> </part>
+</message>
+<message name="iniciaSolicitudFirmaOutput">
+<part element="sps:IniciaSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="anulaSolicitudFirmaInput">
+<part element="sps:AnulaSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="puedeFirmarConPortafirmasMovilInput">
+<part element="sps:PuedeFirmarConPortafirmasMovilRequest" name="parameter"> </part>
+</message>
+<message name="eliminaSolicitudFirmaOutput">
+<part element="sps:EliminaSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="anulaSolicitudFirmaOutput">
+<part element="sps:AnulaSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="eliminaDocumentoOriginalOutput">
+<part element="sps:EliminaDocumentoOriginalResponse" name="parameter"> </part>
+</message>
+<message name="consultaEstadoSolicitudFirmaInput">
+<part element="sps:ConsultaEstadoSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="incluyeDocumentoArchivoEnSolicitudOutput">
+<part element="sps:IncluyeDocumentoArchivoEnSolicitudResponse" name="parameter"> </part>
+</message>
+<message name="eliminaSolicitudFirmaInput">
+<part element="sps:EliminaSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="listaSolicitudesFirmaOutput">
+<part element="sps:ListaSolicitudesFirmaResponse" name="parameter"> </part>
+</message>
+<message name="guardaDocumentoOriginalOutput">
+<part element="sps:GuardaDocumentoOriginalResponse" name="parameter"> </part>
+</message>
+<message name="finalizaSolicitudFirmaInput">
+<part element="sps:FinalizaSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="eliminaDocumentoOriginalInput">
+<part element="sps:EliminaDocumentoOriginalRequest" name="parameter"> </part>
+</message>
+<message name="puedeFirmarConPortafirmasMovilOutput">
+<part element="sps:PuedeFirmarConPortafirmasMovilResponse" name="parameter"> </part>
+</message>
+<message name="finalizaSolicitudFirmaOutput">
+<part element="sps:FinalizaSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="recuperaInformacionBasicaDocumentoInput">
+<part element="sps:RecuperaInformacionBasicaDocumentoRequest" name="parameter"> </part>
+</message>
+<message name="consultaEstadoSolicitudFirmaOutput">
+<part element="sps:ConsultaEstadoSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<message name="recuperaContenidoDocumentoInput">
+<part element="sps:RecuperaContenidoDocumentoRequest" name="parameter"> </part>
+</message>
+<message name="incluyeDocumentoArchivoEnSolicitudInput">
+<part element="sps:IncluyeDocumentoArchivoEnSolicitudRequest" name="parameter"> </part>
+</message>
+<message name="iniciaSolicitudFirmaInput">
+<part element="sps:IniciaSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="generaSolicitudFirmaMovilSincronaInput">
+<part element="sps:GeneraSolicitudFirmaMovilSincronaRequest" name="parameter"> </part>
+</message>
+<message name="anulaDocumentoFirmadoInput">
+<part element="sps:AnulaDocumentoFirmadoRequest" name="parameter"> </part>
+</message>
+<message name="recuperaInformacionBasicaDocumentoOutput">
+<part element="sps:RecuperaInformacionBasicaDocumentoResponse" name="parameter"> </part>
+</message>
+<message name="recuperaContenidoDocumentoOutput">
+<part element="sps:RecuperaContenidoDocumentoResponse" name="parameter"> </part>
+</message>
+<message name="anulaDocumentoFirmadoOutput">
+<part element="sps:AnulaDocumentoFirmadoResponse" name="parameter"> </part>
+</message>
+<message name="generaSolicitudFirmadaOutput">
+<part element="sps:GeneraSolicitudFirmadaResponse" name="parameter"> </part>
+</message>
+<message name="guardaDocumentoOriginalInput">
+<part element="sps:GuardaDocumentoOriginalRequest" name="parameter"> </part>
+</message>
+<message name="generaSolicitudFirmaMovilSincronaOutput">
+<part element="sps:GeneraSolicitudFirmaMovilSincronaResponse" name="parameter"> </part>
+</message>
+<message name="modificaSolicitudFirmaInput">
+<part element="sps:ModificaSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="listaDocumentosEnSolicitudFirmaInput">
+<part element="sps:ListaDocumentosEnSolicitudFirmaRequest" name="parameter"> </part>
+</message>
+<message name="listaDocumentosEnSolicitudFirmaOutput">
+<part element="sps:ListaDocumentosEnSolicitudFirmaResponse" name="parameter"> </part>
+</message>
+<portType name="ServicioPortafirmasUMUSOAP">
+<operation name="iniciaSolicitudFirma">
+<input message="sp:iniciaSolicitudFirmaInput"> </input>
+<output message="sp:iniciaSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="modificaSolicitudFirma">
+<input message="sp:modificaSolicitudFirmaInput"> </input>
+<output message="sp:modificaSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="guardaDocumentoOriginal">
+<input message="sp:guardaDocumentoOriginalInput"> </input>
+<output message="sp:guardaDocumentoOriginalOutput"> </output>
+</operation>
+<operation name="incluyeDocumentoArchivoEnSolicitud">
+<input message="sp:incluyeDocumentoArchivoEnSolicitudInput"> </input>
+<output message="sp:incluyeDocumentoArchivoEnSolicitudOutput"> </output>
+</operation>
+<operation name="finalizaSolicitudFirma">
+<input message="sp:finalizaSolicitudFirmaInput"> </input>
+<output message="sp:finalizaSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="listaSolicitudesFirma">
+<input message="sp:listaSolicitudesFirmaInput"> </input>
+<output message="sp:listaSolicitudesFirmaOutput"> </output>
+</operation>
+<operation name="consultaEstadoSolicitudFirma">
+<input message="sp:consultaEstadoSolicitudFirmaInput"> </input>
+<output message="sp:consultaEstadoSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="listaDocumentosEnSolicitudFirma">
+<input message="sp:listaDocumentosEnSolicitudFirmaInput"> </input>
+<output message="sp:listaDocumentosEnSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="recuperaContenidoDocumento">
+<input message="sp:recuperaContenidoDocumentoInput"> </input>
+<output message="sp:recuperaContenidoDocumentoOutput"> </output>
+</operation>
+<operation name="recuperaInformacionBasicaDocumento">
+<input message="sp:recuperaInformacionBasicaDocumentoInput"> </input>
+<output message="sp:recuperaInformacionBasicaDocumentoOutput"> </output>
+</operation>
+<operation name="eliminaDocumentoOriginal">
+<input message="sp:eliminaDocumentoOriginalInput"> </input>
+<output message="sp:eliminaDocumentoOriginalOutput"> </output>
+</operation>
+<operation name="eliminaSolicitudFirma">
+<input message="sp:eliminaSolicitudFirmaInput"> </input>
+<output message="sp:eliminaSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="anulaSolicitudFirma">
+<input message="sp:anulaSolicitudFirmaInput"> </input>
+<output message="sp:anulaSolicitudFirmaOutput"> </output>
+</operation>
+<operation name="anulaDocumentoFirmado">
+<input message="sp:anulaDocumentoFirmadoInput"> </input>
+<output message="sp:anulaDocumentoFirmadoOutput"> </output>
+</operation>
+<operation name="generaSolicitudFirmaMovilSincrona">
+<input message="sp:generaSolicitudFirmaMovilSincronaInput"> </input>
+<output message="sp:generaSolicitudFirmaMovilSincronaOutput"> </output>
+</operation>
+<operation name="puedeFirmarConPortafirmasMovil">
+<input message="sp:puedeFirmarConPortafirmasMovilInput"> </input>
+<output message="sp:puedeFirmarConPortafirmasMovilOutput"> </output>
+</operation>
+<operation name="generaSolicitudFirmada">
+<input message="sp:generaSolicitudFirmadaInput"> </input>
+<output message="sp:generaSolicitudFirmadaOutput"> </output>
+</operation>
+</portType>
+<binding name="ServicioPortafirmasUMUBinding" type="sp:ServicioPortafirmasUMUSOAP">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+<operation name="iniciaSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#iniciaSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="modificaSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#modificaSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="guardaDocumentoOriginal">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#guardaDocumentoOriginal"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="incluyeDocumentoArchivoEnSolicitud">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#incluyeDocumentoArchivoEnSolicitud"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="finalizaSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#finalizaSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="listaSolicitudesFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#listaSolicitudesFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="consultaEstadoSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#consultaEstadoSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="listaDocumentosEnSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#listaDocumentosEnSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="recuperaContenidoDocumento">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#recuperaContenidoDocumento"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="recuperaInformacionBasicaDocumento">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#recuperaInformacionBasicaDocumento"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="eliminaDocumentoOriginal">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#eliminaDocumentoOriginal"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="eliminaSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#eliminaSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="anulaSolicitudFirma">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#anulaSolicitudFirma"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="anulaDocumentoFirmado">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#anulaDocumentoFirmado"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="generaSolicitudFirmaMovilSincrona">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#generaSolicitudFirmaMovilSincrona"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="puedeFirmarConPortafirmasMovil">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#puedeFirmarConPortafirmasMovil"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="generaSolicitudFirmada">
+<soap:operation soapAction="urn:umu:eadmin:services:portafirmas#generaSolicitudFirmada"/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+</binding>
+<service name="ServicioPortafirmasUMU">
+<port binding="sp:ServicioPortafirmasUMUBinding" name="ServicioPortafirmasUMU">
+<soap:address location="http://localhost:9090/portafirmas/services/ServicioPortafirmasUMU"/>
+</port>
+</service>
+</definitions>

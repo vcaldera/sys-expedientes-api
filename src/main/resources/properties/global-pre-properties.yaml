@@ -1,0 +1,26 @@
+port: "8081"
+apiInstance: "2627768"
+
+response:
+  timeout: "60000"
+  
+connection:
+  timeout: "10000"  
+  
+json:
+  logger:
+    application:
+      name: "exp-app2u-aas"
+      version: "1.0.0"
+      environmentName: "Preproduction"
+      
+retry:
+  delay: "1000"
+      
+
+
+sys-sfdc-aas:
+  host: "sys-sfdc-aas-pre-0f2czh.internal-vomdec.deu-c1.eu1.cloudhub.io"
+  port: ""
+  
+

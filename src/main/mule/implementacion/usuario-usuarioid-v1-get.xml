@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get:\v1\usuarios\(usuario)\expedientes:sys-expedientes-api-config" doc:id="e5812731-546b-4599-bb08-597dae9b588d" >
+		<logger level="INFO" doc:name="START - INFO" doc:id="c905b028-961e-4025-b587-66ad59171cd3" message='#[%dw 2.0&#10;output application/json&#10;---&#10;&#10;{&#10;uriParams: if(attributes.uriParams?) write(attributes.uriParams,"application/json",{indent:false}) else null, &#10;queryParams: if(attributes.queryParams?) write(attributes.queryParams,"application/json",{indent:false}) else null&#10;}]' />
+		<ee:transform doc:name="vars.sqlSelect - vars.sqlSelectParams" doc:id="b5f72e34-f889-4b87-9b72-f5bd31881109">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="sqlSelectParams"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  // Quien consulta (permiso de acceso)
+  usuario: (attributes.uriParams.usuario as String),
+
+  // Filtros opcionales (usuario del expediente y descripcion del expediente)
+  filterUsuario: (attributes.queryParams.usuario default null) as String | Null,
+  filterDescripcion: (attributes.queryParams.descripcion default null) as String | Null
+}]]></ee:set-variable>
+				<ee:set-variable variableName="sqlSelect"><![CDATA[%dw 2.0
+output application/java
+---
+"
+SELECT
+  a.id                                      AS id_asunto,
+  a.descripcion                             AS asunto_descripcion,
+  a.fecha_baja                              AS asunto_fecha_baja,
+  e.codigo                                  AS expediente_codigo,
+  e.descripcion                             AS expediente_descripcion,
+  e.usuario                                 AS expediente_usuario,
+  NVL(d.doc_count, 0)                       AS documentos_count,
+  NVL(t.ter_count, 0)                       AS terceros_count
+FROM expediente e
+JOIN asunto a ON a.id = e.id_asunto
+LEFT JOIN (
+  SELECT codigo_expediente, COUNT(*) AS doc_count
+  FROM documento
+  GROUP BY codigo_expediente
+) d ON d.codigo_expediente = e.codigo
+LEFT JOIN (
+  SELECT codigo_expediente, COUNT(DISTINCT id_tercero) AS ter_count
+  FROM tercero_expediente
+  GROUP BY codigo_expediente
+) t ON t.codigo_expediente = e.codigo
+WHERE
+  (
+    e.usuario = :usuario
+    OR EXISTS (
+      SELECT 1
+      FROM permiso p
+      WHERE p.usuario   = :usuario
+        AND p.id_asunto = a.id
+        AND (p.fecha_baja IS NULL OR p.fecha_baja > SYSDATE)
+    )
+  )
+  AND (a.fecha_baja IS NULL OR a.fecha_baja > SYSDATE)
+  -- Filtro opcional por usuario (exact match, case-insensitive)
+  AND (:filterUsuario IS NULL OR LOWER(e.usuario) = LOWER(CAST(:filterUsuario AS VARCHAR2(4000))))
+  -- Filtro opcional por descripción (contiene, case-insensitive) con CLOB-safe
+  AND (:filterDescripcion IS NULL OR
+       INSTR(LOWER(DBMS_LOB.SUBSTR(e.descripcion, 4000, 1)),
+             LOWER(CAST(:filterDescripcion AS VARCHAR2(4000)))) > 0)
+ORDER BY a.id, e.codigo
+"
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="d6d11dd6-3626-4ce0-bec7-b32d2b973a71" >
+			<when expression="#[(attributes.uriParams.usuario == 'jlopez') and&#10;  (attributes.queryParams.descripcion== 'mock') and&#10;  (attributes.queryParams.usuario == 'mock')]">
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;&#10;---&#10;&#10;  {&#10;    "usuario": "jlopez",&#10;    "grupos": [&#10;      {&#10;        "asunto": {&#10;          "id": 10,&#10;          "descripcion": "Contratación",&#10;          "fechaBaja": null&#10;        },&#10;        "expedientes": [&#10;          {&#10;            "codigo": "EXP-2025-00045",&#10;            "descripcion": "Contrato proveedor ACME",&#10;            "usuario": "jlopez",&#10;            "idAsunto": 10&#10;          }&#10;        ]&#10;      }&#10;    ]&#10;  }]' doc:name="mock" doc:id="3c98d4d6-1919-44a5-b10b-893eaa6503e5" />
+			</when>
+			<when expression="#[attributes.uriParams.usuario=='jlopez']">
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;&#10;---&#10;&#10;  {&#10;    "usuario": "jlopez",&#10;    "grupos": [&#10;      {&#10;        "asunto": {&#10;          "id": 10,&#10;          "descripcion": "Contratación",&#10;          "fechaBaja": null&#10;        },&#10;        "expedientes": [&#10;          {&#10;            "codigo": "EXP-2025-00045",&#10;            "descripcion": "Contrato proveedor ACME",&#10;            "usuario": "jlopez",&#10;            "idAsunto": 10&#10;          }&#10;        ]&#10;      }&#10;    ]&#10;  }]' doc:name="Set Payload" doc:id="88db601e-124f-43bb-8008-ced26f3bb182" />
+			</when>
+			<otherwise >
+				<until-successful maxRetries="${db2.retry.maxRetries}" doc:name="Until Successful" doc:id="2cb8e323-67f1-485d-bd67-c18c5df04b65" millisBetweenRetries="${db2.retry.millisBetweenRetries}">
+					<db:select doc:name="Select" doc:id="80714371-7edd-4f56-9743-d33c39622311" config-ref="Database_Config_Oracle_BD">
+						<db:sql><![CDATA[#[vars.sqlSelect]]]></db:sql>
+						<db:input-parameters><![CDATA[#[vars.sqlSelectParams]]]></db:input-parameters>
+					</db:select>
+				</until-successful>
+				<ee:transform doc:name="Set response" doc:id="4125c945-1a55-4e28-9d2d-1f99edc6f1cf">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var u = (vars.sqlSelectParams.usuario default attributes.uriParams.usuario) as String
+var rows = (payload default []) as Array<Object>
+var grouped = rows groupBy ((r) -> r.id_asunto)
+
+var gruposArr =
+  (grouped pluck ((val, key) ->
+    {
+      asunto: {
+        id: (key as Number),
+        descripcion: (val[0].asunto_descripcion default null),
+        fechaBaja:   (val[0].asunto_fecha_baja   default null)
+      },
+      expedientes: (
+        val map ((e) ->
+          {
+            codigo: e.expediente_codigo,
+            descripcion: e.expediente_descripcion,
+            usuario: e.expediente_usuario,
+            contadores: {
+              documentos: (e.documentos_count default 0) as Number,
+              terceros:   (e.terceros_count   default 0) as Number
+            }
+          }
+        )
+      )
+    }
+  )) default []
+
+---
+if (isEmpty(gruposArr))
+  {
+    message: "No hay coincidencias en la BBDD con esos parámetros de búsqueda",
+    usuario: u,
+    grupos: []
+  }
+else
+  {
+    usuario: u,
+    grupos: gruposArr
+  }
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="END - INFO" doc:id="abe472f8-924a-4ce6-8da5-0f61843ce49c" message="#[%dw 2.0&#10;output application/json&#10;---&#10;&#10;payload]" />
+		<error-handler ref="global-error-handler">
+			<!-- [STUDIO:"On Error Propagate"]<on-error-propagate enableNotifications="false" logException="false" doc:name="On Error Propagate" doc:id="3ff0e3e7-de5c-4444-9413-8145269287de" type="ANY" >
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;var msg = error.description as String default "Unknown error description"&#10;&#45;&#45;-&#10;{status: "KO", message: msg}&#93;' doc:name="Set error response" doc:id="2191a2cb-9edf-4ea2-bae5-6ec1e75b0ac7" />
+			</on-error-propagate> [STUDIO] -->
+		</error-handler>
+	</flow>
+</mule>
